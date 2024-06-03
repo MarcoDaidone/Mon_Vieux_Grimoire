@@ -5,8 +5,10 @@ const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const app = express();
 const path = require('path');
+require('dotenv').config();
 
-mongoose.connect('mongodb+srv://designdmarco:wPACPUsiAEd4Laaj@cluster0.zdlm85q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+
+mongoose.connect(process.env.MONGODB_URI,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
