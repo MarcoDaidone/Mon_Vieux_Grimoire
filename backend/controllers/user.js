@@ -13,8 +13,18 @@ bcrypt.hash(req.body.password, 10)
     password: hash
   });
   user.save()
-    .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-    .catch(error => res.status(400).json({ error }));
+  .then(() => {
+    console.log('User created successfully');
+    res.status(201).json({ message: 'Utilisateur créé !' });
+  })
+  .catch(error => {
+    console.error('Error saving user:', error);
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ message: "Adresse mail incorrecte" });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  });
 })
 .catch(error => res.status(500).json({ error }));
 };

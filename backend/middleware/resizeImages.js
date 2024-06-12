@@ -3,8 +3,6 @@ const fs = require('fs');
 
 const resizeImages = async (req, res, next) => {
   try {
-    console.log('Middleware resizeImages started');
-
     // Vérifier si le dossier 'images' existe, sinon le créer
     if (!fs.existsSync('./images')) {
       console.log('Directory ./images does not exist, creating it');

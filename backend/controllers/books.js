@@ -2,6 +2,17 @@
 const bookSchema = require('../models/bookShema');
 const fs = require('fs');
 
+function deleteImgFile (bookToDelete) {
+  if (bookToDelete.imageUrl) {
+      const filenameThumb = bookToDelete.imageUrl.split('/images/')[1];
+      const filenameLarge = filenameThumb.split('_thumbnail')[0];
+
+      fs.unlink(`images/${filenameLarge}.jpg`, () => { });
+      fs.unlink(`images/${filenameLarge}.jpeg`, () => { });
+      fs.unlink(`images/${filenameLarge}.png`, () => { });
+      fs.unlink(`images/${filenameThumb}`, () => { });
+  }
+};
 // middleware sharpe 
 exports.createBooks = async (req, res, next) => {
   try {
@@ -49,25 +60,30 @@ exports.getBookById = (req, res, next) => {
     .catch(error => res.status(400).json({ error }));
 };
 
-exports.updateBookById = async (req, res, next) => {
+
+exports.updateBookById = async (req, res) => {
   try {
-    const { id } = req.params;
-    let imageUrl = req.imageUrl;
-   
-    const bookObject = req.body.book ? JSON.parse(req.body.book) : {};
-    if (imageUrl) {
-      bookObject.imageUrl = imageUrl;
+    const bookData = req.body.book ? JSON.parse(req.body.book) : req.body;
+
+    const book = req.file ? {
+      ...bookData,
+      imageUrl: req.imageUrl,
+    } : bookData;
+
+    const bookBefore = await bookSchema.findOneAndUpdate(
+      { _id: req.params.id, userId: req.auth.userId },
+      book
+    );
+
+    if (!bookBefore) {
+      return res.status(403).json({ message: 'Non autorisé' });
     }
 
-    bookSchema.findByIdAndUpdate(id, { ...bookObject, _id: id }, { new: true })
-      .then(updatedBook => {
-        if (!updatedBook) {
-          return res.status(404).json({ message: 'Livre non trouvé' });
-        }
-        res.status(200).json(updatedBook);
-      })
-      .catch(error => res.status(400).json({ error }));
+    deleteImgFile(bookBefore);
+
+    res.json({ message: 'Livre mis à jour' });
   } catch (error) {
+    console.error('Error updating book:', error);
     res.status(500).json({ error: error.message });
   }
 };
